@@ -26,6 +26,7 @@ const state = {
   hoveredCrop: null,
   soundEnabled: true,
   musicEnabled: true,
+  platformAudioEnabled: true,
   audioReady: false,
 };
 
@@ -55,6 +56,8 @@ const audio = {
   music: null,
   sfx: {},
 };
+
+const playablesSdk = window.playables || null;
 
 const imageCache = {};
 
@@ -108,13 +111,13 @@ const ensureAudioReady = () => {
   audio.sfx.harvest.volume = 0.6;
   audio.sfx.reveal = new Audio(assets.sfx.reveal);
   audio.sfx.reveal.volume = 0.7;
-  if (state.musicEnabled) {
+  if (state.musicEnabled && state.platformAudioEnabled) {
     audio.music.play().catch(() => {});
   }
 };
 
 const playSfx = (soundKey) => {
-  if (!state.audioReady || !state.soundEnabled) {
+  if (!state.audioReady || !state.soundEnabled || !state.platformAudioEnabled) {
     return;
   }
   const source = audio.sfx[soundKey];
@@ -128,20 +131,61 @@ const playSfx = (soundKey) => {
 
 const toggleSound = () => {
   state.soundEnabled = !state.soundEnabled;
-  soundToggle.textContent = state.soundEnabled ? "🔊 Sound: On" : "🔈 Sound: Off";
+  updateAudioUi();
 };
 
 const toggleMusic = () => {
   state.musicEnabled = !state.musicEnabled;
-  musicToggle.textContent = state.musicEnabled ? "🎵 Music: On" : "🎵 Music: Off";
+  updateAudioUi();
   if (!state.audioReady) {
     return;
   }
-  if (state.musicEnabled) {
+  if (state.musicEnabled && state.platformAudioEnabled) {
     audio.music.play().catch(() => {});
   } else {
     audio.music.pause();
   }
+};
+
+const updateAudioUi = () => {
+  if (state.platformAudioEnabled) {
+    soundToggle.textContent = state.soundEnabled ? "🔊 Sound: On" : "🔈 Sound: Off";
+    musicToggle.textContent = state.musicEnabled ? "🎵 Music: On" : "🎵 Music: Off";
+    return;
+  }
+  soundToggle.textContent = "🔇 Sound: YouTube Muted";
+  musicToggle.textContent = "🔇 Music: YouTube Muted";
+};
+
+const applyPlatformAudioState = (enabled) => {
+  state.platformAudioEnabled = Boolean(enabled);
+  updateAudioUi();
+  if (!state.audioReady) {
+    return;
+  }
+  if (state.platformAudioEnabled && state.musicEnabled) {
+    audio.music.play().catch(() => {});
+  } else {
+    audio.music.pause();
+  }
+};
+
+const initPlayablesSdk = () => {
+  if (!playablesSdk) {
+    updateAudioUi();
+    return;
+  }
+
+  const initialAudio = playablesSdk.isAudioEnabled?.();
+  if (typeof initialAudio?.then === "function") {
+    initialAudio.then(applyPlatformAudioState).catch(() => {});
+  } else if (typeof initialAudio === "boolean") {
+    applyPlatformAudioState(initialAudio);
+  }
+
+  playablesSdk.onAudioEnabledChange?.((enabled) => {
+    applyPlatformAudioState(enabled);
+  });
 };
 
 const rngPick = (list) => {
@@ -468,6 +512,7 @@ splash.addEventListener("pointerdown", () => {
   splash.style.display = "none";
   ensureAudioReady();
   showToast("Click crops to pull them up!");
+  playablesSdk?.gameReady?.();
 });
 
 resetBtn.addEventListener("click", () => {
@@ -497,7 +542,11 @@ document.querySelectorAll("img[data-fallback]").forEach((image) => {
 });
 
 resetField();
-requestAnimationFrame(render);
+initPlayablesSdk();
+requestAnimationFrame((time) => {
+  playablesSdk?.firstFrameReady?.();
+  render(time);
+});
 
 // Spice ideas (not shown in UI):
 // - PIXI.js for layered sprite rendering + particle systems.
