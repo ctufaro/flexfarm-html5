@@ -157,6 +157,18 @@
       border: 2px solid #2a2a2a;
     }
 
+    button.toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      font-size: 0.95rem;
+    }
+
+    button.toggle span {
+      font-size: 0.9rem;
+    }
+
     .toast {
       position: absolute;
       left: 50%;
@@ -200,6 +212,23 @@
       margin: 0;
     }
 
+    .asset-panel {
+      background: rgba(255, 255, 255, 0.65);
+      border-radius: 16px;
+      padding: 14px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      border: 1px dashed rgba(0, 0, 0, 0.1);
+    }
+
+    .asset-panel code {
+      background: rgba(0, 0, 0, 0.05);
+      padding: 2px 6px;
+      border-radius: 8px;
+      display: inline-block;
+      margin-top: 4px;
+    }
+
     @media (max-width: 900px) {
       main {
         grid-template-columns: 1fr;
@@ -217,6 +246,8 @@
     <div class="hud">
       <div class="pill">Harvested: <strong id="stat-harvested">0</strong></div>
       <div class="pill">Combo: <strong id="stat-combo">0</strong>x</div>
+      <button class="toggle secondary" id="sound-toggle"><span>🔊</span> Sound: On</button>
+      <button class="toggle secondary" id="music-toggle"><span>🎵</span> Music: On</button>
     </div>
   </header>
 
@@ -227,6 +258,7 @@
       <div class="splash" id="splash">
         <h2>Welcome to Whimsy Harvest</h2>
         <p>Stroll the meadow, click a crop, and give it a gentle tug. Pull up enough crops to light up the field!</p>
+        <p><strong>Tip:</strong> Hit Start to enable sound + music.</p>
         <div class="btn-row">
           <button id="start-btn">Start Harvesting</button>
           <button id="how-btn" class="secondary">How to Play</button>
@@ -244,6 +276,13 @@
         <span><span class="dot" style="background: #ffd166;"></span> Golden beet (combo bonus)</span>
       </div>
       <p>Keep an eye out for the golden beet to boost your combo meter!</p>
+      <div class="asset-panel">
+        <strong>Asset placeholders</strong>
+        <p>Swap these file paths with your real audio + image assets:</p>
+        <p>Music: <code>assets/music/relaxing-loop.mp3</code></p>
+        <p>SFX: <code>assets/sfx/harvest-pop.mp3</code>, <code>assets/sfx/reveal-poof.mp3</code></p>
+        <p>Images: <code>assets/items/carrot.png</code>, <code>assets/items/tomato.png</code>, <code>assets/items/lettuce.png</code>, <code>assets/items/golden-beet.png</code></p>
+      </div>
       <div class="btn-row">
         <button id="reset-btn" class="secondary">Reset Field</button>
       </div>
@@ -260,17 +299,46 @@
     const resetBtn = document.getElementById("reset-btn");
     const statHarvested = document.getElementById("stat-harvested");
     const statCombo = document.getElementById("stat-combo");
+    const soundToggle = document.getElementById("sound-toggle");
+    const musicToggle = document.getElementById("music-toggle");
 
     const state = {
       crops: [],
       particles: [],
+      reveals: [],
       harvested: 0,
       combo: 0,
       showSplash: true,
       tutorialMode: false,
       lastHarvestTime: 0,
       hoveredCrop: null,
+      soundEnabled: true,
+      musicEnabled: true,
+      audioReady: false,
     };
+
+    const assets = {
+      music: {
+        background: "assets/music/relaxing-loop.mp3",
+      },
+      sfx: {
+        harvest: "assets/sfx/harvest-pop.mp3",
+        reveal: "assets/sfx/reveal-poof.mp3",
+      },
+      images: {
+        Carrot: "assets/items/carrot.png",
+        Tomato: "assets/items/tomato.png",
+        Lettuce: "assets/items/lettuce.png",
+        "Golden Beet": "assets/items/golden-beet.png",
+      },
+    };
+
+    const audio = {
+      music: null,
+      sfx: {},
+    };
+
+    const imageCache = {};
 
     const cropTypes = [
       {
@@ -310,6 +378,54 @@
       center: { x: canvas.width / 2, y: canvas.height / 2 },
     };
 
+    const ensureAudioReady = () => {
+      if (state.audioReady) {
+        return;
+      }
+      state.audioReady = true;
+      audio.music = new Audio(assets.music.background);
+      audio.music.loop = true;
+      audio.music.volume = 0.35;
+      audio.sfx.harvest = new Audio(assets.sfx.harvest);
+      audio.sfx.harvest.volume = 0.6;
+      audio.sfx.reveal = new Audio(assets.sfx.reveal);
+      audio.sfx.reveal.volume = 0.7;
+      if (state.musicEnabled) {
+        audio.music.play().catch(() => {});
+      }
+    };
+
+    const playSfx = (soundKey) => {
+      if (!state.audioReady || !state.soundEnabled) {
+        return;
+      }
+      const source = audio.sfx[soundKey];
+      if (!source) {
+        return;
+      }
+      const clone = source.cloneNode();
+      clone.volume = source.volume;
+      clone.play().catch(() => {});
+    };
+
+    const toggleSound = () => {
+      state.soundEnabled = !state.soundEnabled;
+      soundToggle.textContent = state.soundEnabled ? "🔊 Sound: On" : "🔈 Sound: Off";
+    };
+
+    const toggleMusic = () => {
+      state.musicEnabled = !state.musicEnabled;
+      musicToggle.textContent = state.musicEnabled ? "🎵 Music: On" : "🎵 Music: Off";
+      if (!state.audioReady) {
+        return;
+      }
+      if (state.musicEnabled) {
+        audio.music.play().catch(() => {});
+      } else {
+        audio.music.pause();
+      }
+    };
+
     const rngPick = (list) => {
       const total = list.reduce((sum, item) => sum + item.weight, 0);
       let roll = Math.random() * total;
@@ -342,6 +458,7 @@
     const resetField = () => {
       state.crops = [];
       state.particles = [];
+      state.reveals = [];
       for (let i = 0; i < 18; i += 1) {
         spawnCrop();
       }
@@ -366,6 +483,29 @@
           color,
         });
       }
+    };
+
+    const createDirtPoof = (x, y) => {
+      for (let i = 0; i < 16; i += 1) {
+        state.particles.push({
+          x,
+          y,
+          vx: (Math.random() - 0.5) * 5,
+          vy: (Math.random() - 0.8) * 5,
+          life: 45 + Math.random() * 20,
+          color: "rgba(141, 86, 55, 0.9)",
+        });
+      }
+    };
+
+    const getItemImage = (type) => {
+      if (imageCache[type.name]) {
+        return imageCache[type.name];
+      }
+      const image = new Image();
+      image.src = assets.images[type.name];
+      imageCache[type.name] = image;
+      return image;
     };
 
     const drawBackground = () => {
@@ -403,22 +543,17 @@
       ctx.ellipse(crop.x, soilY, crop.size * 1.2, crop.size * 0.6, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = crop.type.color;
-      ctx.beginPath();
-      ctx.ellipse(crop.x, crop.y + bob, crop.size, crop.size * 1.3, 0, 0, Math.PI * 2);
-      ctx.fill();
-
       ctx.strokeStyle = crop.type.stem;
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.moveTo(crop.x, crop.y - crop.size * 0.9 + bob);
-      ctx.lineTo(crop.x, crop.y - crop.size * 1.6 + bob);
+      ctx.moveTo(crop.x, crop.y - crop.size * 0.4 + bob);
+      ctx.lineTo(crop.x, crop.y - crop.size * 1.2 + bob);
       ctx.stroke();
 
       ctx.fillStyle = crop.type.stem;
       ctx.beginPath();
-      ctx.ellipse(crop.x - 6, crop.y - crop.size * 1.6 + bob, 8, 4, -0.4, 0, Math.PI * 2);
-      ctx.ellipse(crop.x + 6, crop.y - crop.size * 1.6 + bob, 8, 4, 0.4, 0, Math.PI * 2);
+      ctx.ellipse(crop.x - 6, crop.y - crop.size * 1.35 + bob, 10, 5, -0.4, 0, Math.PI * 2);
+      ctx.ellipse(crop.x + 6, crop.y - crop.size * 1.35 + bob, 10, 5, 0.4, 0, Math.PI * 2);
       ctx.fill();
 
       if (highlight) {
@@ -441,6 +576,44 @@
       });
     };
 
+    const drawReveal = (reveal, time) => {
+      const progress = Math.min((time - reveal.start) / reveal.duration, 1);
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const scale = 0.6 + easeOut * 0.8;
+      const glow = Math.sin(progress * Math.PI);
+      const image = reveal.image;
+      const size = reveal.size * scale;
+
+      ctx.save();
+      ctx.globalAlpha = 1 - progress * 0.2;
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.5 * glow})`;
+      ctx.beginPath();
+      ctx.arc(reveal.x, reveal.y, reveal.size * (1.2 + glow * 0.6), 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = `rgba(255, 204, 92, ${0.8 * (1 - progress)})`;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(reveal.x, reveal.y, reveal.size * (1 + progress * 1.2), 0, Math.PI * 2);
+      ctx.stroke();
+
+      if (image && image.complete && image.naturalWidth) {
+        ctx.drawImage(image, reveal.x - size / 2, reveal.y - size / 2, size, size);
+      } else {
+        ctx.fillStyle = reveal.type.color;
+        ctx.beginPath();
+        ctx.ellipse(reveal.x, reveal.y, size * 0.55, size * 0.7, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+        ctx.font = `${Math.max(14, size * 0.5)}px "Trebuchet MS", sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("?", reveal.x, reveal.y);
+      }
+
+      ctx.restore();
+    };
+
     const updateParticles = () => {
       state.particles = state.particles.filter((particle) => particle.life > 0);
       state.particles.forEach((particle) => {
@@ -454,8 +627,10 @@
     const render = (time) => {
       drawBackground();
       state.crops.forEach((crop) => drawCrop(crop, time));
+      state.reveals.forEach((reveal) => drawReveal(reveal, time));
       drawParticles();
       updateParticles();
+      state.reveals = state.reveals.filter((reveal) => time - reveal.start < reveal.duration);
       requestAnimationFrame(render);
     };
 
@@ -468,10 +643,26 @@
       const points = crop.type.value + comboBonus;
       state.harvested += points;
       updateStats();
-      createParticles(crop.x, crop.y, crop.type.color);
+      createDirtPoof(crop.x, crop.y + crop.size * 0.8);
+      createParticles(crop.x, crop.y - crop.size * 0.2, crop.type.color);
+      state.reveals.push({
+        x: crop.x,
+        y: crop.y - crop.size * 0.2,
+        type: crop.type,
+        start: performance.now(),
+        duration: 650,
+        size: crop.size * 2.2,
+        image: getItemImage(crop.type),
+      });
       showToast(`${crop.type.name} +${points}`);
+      playSfx("harvest");
+      setTimeout(() => {
+        playSfx("reveal");
+      }, 120);
       state.crops = state.crops.filter((item) => item.id !== crop.id);
-      spawnCrop();
+      setTimeout(() => {
+        spawnCrop();
+      }, 500);
     };
 
     const getCropAt = (x, y) => {
@@ -505,6 +696,7 @@
       if (state.showSplash) {
         return;
       }
+      ensureAudioReady();
       const point = scalePoint(event);
       const crop = getCropAt(point.x, point.y);
       if (crop) {
@@ -515,17 +707,29 @@
     startBtn.addEventListener("click", () => {
       state.showSplash = false;
       splash.style.display = "none";
+      ensureAudioReady();
     });
 
     howBtn.addEventListener("click", () => {
       state.showSplash = false;
       splash.style.display = "none";
+      ensureAudioReady();
       showToast("Click crops to pull them up!");
     });
 
     resetBtn.addEventListener("click", () => {
       resetField();
       showToast("Fresh soil, fresh crops!");
+    });
+
+    soundToggle.addEventListener("click", () => {
+      toggleSound();
+      ensureAudioReady();
+    });
+
+    musicToggle.addEventListener("click", () => {
+      toggleMusic();
+      ensureAudioReady();
     });
 
     resetField();
