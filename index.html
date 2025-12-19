@@ -3,18 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Flex Farm – Pull Test</title>
+  <title>Flex Farm – Whimsy Harvest</title>
   <style>
     :root {
       color-scheme: light;
-      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-      --soil-loose: #b97a57;
-      --soil-packed: #8b5a3c;
-      --soil-rocky: #6b4b3e;
-      --accent: #3fd48a;
-      --danger: #f25f5c;
-      --bg: #f7f3ec;
-      --panel: #ffffff;
+      font-family: "Trebuchet MS", "Comic Sans MS", system-ui, sans-serif;
+      --sky: #bfe9ff;
+      --grass: #84d27d;
+      --grass-dark: #6bb867;
+      --soil: #b5754e;
+      --soil-dark: #8d5637;
+      --accent: #ffcf5c;
+      --panel: rgba(255, 255, 255, 0.85);
+      --ink: #2a2a2a;
     }
 
     * {
@@ -23,907 +24,512 @@
 
     body {
       margin: 0;
-      background: var(--bg);
-      color: #2b2b2b;
+      background: linear-gradient(180deg, var(--sky) 0%, #e8f6ff 45%, #fdf6e8 100%);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     header {
-      padding: 18px 20px;
-      background: #1d1f24;
-      color: #f8f6f2;
+      padding: 16px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
     }
 
     header h1 {
-      font-size: 1.25rem;
+      font-size: 1.5rem;
       margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    header .stats {
-      font-size: 0.9rem;
+    header h1 span {
+      font-size: 1.1rem;
+      background: var(--accent);
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .hud {
       display: flex;
-      gap: 14px;
+      gap: 12px;
+      align-items: center;
       flex-wrap: wrap;
     }
 
-    main {
-      display: grid;
-      grid-template-columns: 1fr minmax(320px, 440px) 1fr;
-      gap: 16px;
-      padding: 20px;
-    }
-
-    .panel {
+    .hud .pill {
       background: var(--panel);
-      border-radius: 16px;
-      padding: 18px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 600;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
     }
 
-    .left-panel,
-    .right-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+      gap: 18px;
+      padding: 0 24px 24px;
+      align-items: stretch;
     }
 
-    .game-area {
+    .play-area {
+      position: relative;
+      background: linear-gradient(180deg, #ffffff 0%, #f5ffef 100%);
+      border-radius: 24px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      min-height: 520px;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
+      align-items: stretch;
     }
 
     canvas {
       width: 100%;
-      max-width: 360px;
-      height: 520px;
-      border-radius: 20px;
-      background: linear-gradient(180deg, #fefcf8 0%, #e9e3d9 100%);
-      border: 2px solid #e2d8c8;
-    }
-
-    .progress-wrap {
-      width: 100%;
-      max-width: 360px;
-      display: grid;
-      gap: 6px;
-    }
-
-    .progress-label {
-      font-size: 0.9rem;
-      display: flex;
-      justify-content: space-between;
-      color: #5a554f;
-    }
-
-    .progress-bar {
-      height: 18px;
-      border-radius: 999px;
-      background: #ddd2c3;
-      overflow: hidden;
-    }
-
-    .progress-fill {
       height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #6fe7a8 0%, #3fd48a 100%);
-      transition: width 0.1s linear;
+      display: block;
     }
 
-    .actions {
+    .panel {
+      background: var(--panel);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
       display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 16px;
     }
 
-    button,
-    select,
-    input[type="checkbox"] + label {
+    .panel h2 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .panel p {
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .legend {
+      display: grid;
+      gap: 10px;
       font-size: 0.95rem;
+    }
+
+    .legend span {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     button {
       border: none;
       border-radius: 999px;
-      padding: 10px 18px;
-      cursor: pointer;
-      background: #1d1f24;
-      color: #f8f6f2;
+      padding: 10px 16px;
+      background: #2a2a2a;
+      color: #fff;
       font-weight: 600;
+      cursor: pointer;
     }
 
     button.secondary {
-      background: #f2e9dc;
-      color: #2b2b2b;
+      background: #ffffff;
+      color: #2a2a2a;
+      border: 2px solid #2a2a2a;
     }
 
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .status {
-      font-weight: 600;
-      font-size: 1.05rem;
-      min-height: 1.5rem;
-    }
-
-    .status.win {
-      color: var(--accent);
-    }
-
-    .status.fail {
-      color: var(--danger);
-    }
-
-    .crop-card {
-      display: grid;
-      gap: 6px;
-      border: 2px dashed #e2d8c8;
-      border-radius: 12px;
-      padding: 12px;
-    }
-
-    .crop-name {
-      font-size: 1.1rem;
-      font-weight: 700;
-    }
-
-    .chip {
-      display: inline-flex;
-      padding: 4px 10px;
+    .toast {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px 18px;
       border-radius: 999px;
-      background: #f2e9dc;
-      font-size: 0.8rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
       font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      pointer-events: none;
     }
 
-    .settings {
-      display: grid;
-      gap: 12px;
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, -4px);
     }
 
-    .setting-row {
+    .splash {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(140deg, rgba(255, 255, 255, 0.92), rgba(255, 244, 208, 0.95));
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      gap: 12px;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      gap: 16px;
     }
 
-    .setting-row select {
-      padding: 6px 10px;
-      border-radius: 8px;
-      border: 1px solid #d6cbb8;
-      background: #fff;
+    .splash h2 {
+      font-size: 2rem;
+      margin: 0;
     }
 
-    .hint {
-      font-size: 0.85rem;
-      color: #6a655f;
-      line-height: 1.4;
+    .splash p {
+      max-width: 360px;
+      margin: 0;
     }
 
-    .input-hint {
-      display: grid;
-      gap: 6px;
-      font-size: 0.9rem;
-      color: #4d4943;
-    }
-
-    .checkbox-field {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.9rem;
-    }
-
-    .checkbox-field input {
-      width: 18px;
-      height: 18px;
-    }
-
-    @media (max-width: 960px) {
+    @media (max-width: 900px) {
       main {
         grid-template-columns: 1fr;
       }
 
-      canvas,
-      .progress-wrap {
-        max-width: 100%;
+      .play-area {
+        min-height: 460px;
       }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>Flex Farm – Pull Test</h1>
-    <div class="stats">
-      <span>Total Pulls: <strong id="stat-pulls">0</strong></span>
-      <span>Total Wins: <strong id="stat-wins">0</strong></span>
+    <h1>Flex Farm <span>Whimsy Harvest</span></h1>
+    <div class="hud">
+      <div class="pill">Harvested: <strong id="stat-harvested">0</strong></div>
+      <div class="pill">Combo: <strong id="stat-combo">0</strong>x</div>
     </div>
   </header>
 
   <main>
-    <section class="panel left-panel">
-      <div class="crop-card" id="crop-card">
-        <div class="crop-name" id="crop-name">Pick a difficulty to begin</div>
-        <div>
-          <span class="chip" id="crop-difficulty">Difficulty: --</span>
+    <section class="play-area">
+      <canvas id="game-canvas" width="960" height="640"></canvas>
+      <div class="toast" id="toast">Yay!</div>
+      <div class="splash" id="splash">
+        <h2>Welcome to Whimsy Harvest</h2>
+        <p>Stroll the meadow, click a crop, and give it a gentle tug. Pull up enough crops to light up the field!</p>
+        <div class="btn-row">
+          <button id="start-btn">Start Harvesting</button>
+          <button id="how-btn" class="secondary">How to Play</button>
         </div>
-        <div>
-          <span class="chip" id="crop-soil">Soil: --</span>
-          <span class="chip" id="crop-rarity">Rarity: --</span>
-        </div>
-        <div class="hint" id="crop-flavor">The soil is waiting for a brave pull.</div>
-        <div class="hint" id="crop-size"></div>
-      </div>
-
-      <div class="settings">
-        <div class="setting-row">
-          <label for="difficulty">Difficulty</label>
-          <select id="difficulty">
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-          </select>
-        </div>
-        <div class="setting-row">
-          <label for="input-mode">Input Mode</label>
-          <select id="input-mode">
-            <option value="hold">Hold to Pull</option>
-            <option value="tap">Tap to Pull</option>
-          </select>
-        </div>
-        <div class="checkbox-field">
-          <input type="checkbox" id="sound-toggle" checked />
-          <label for="sound-toggle">Sound On</label>
-        </div>
-        <p class="hint">Tip: hold spacebar, mouse, or touch. Tap mode works best on mobile.</p>
       </div>
     </section>
 
-    <section class="panel game-area">
-      <canvas id="game-canvas" width="360" height="520"></canvas>
-      <div class="progress-wrap">
-        <div class="progress-label">
-          <span>Uproot Progress</span>
-          <span id="progress-value">0%</span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="progress-fill"></div>
-        </div>
+    <aside class="panel">
+      <h2>How it works</h2>
+      <p>Click crops to pull them up. Each crop you harvest pops a little sparkle and refreshes somewhere new.</p>
+      <div class="legend">
+        <span><span class="dot" style="background: #f9a65a;"></span> Carrot pops (+1)</span>
+        <span><span class="dot" style="background: #f26d6d;"></span> Tomato pops (+2)</span>
+        <span><span class="dot" style="background: #7cc576;"></span> Lettuce pops (+1)</span>
+        <span><span class="dot" style="background: #ffd166;"></span> Golden beet (combo bonus)</span>
       </div>
-      <div class="status" id="status-text">Ready to pull.</div>
-      <div class="actions">
-        <button id="start-btn">Start Pull</button>
-        <button id="retry-btn" class="secondary" disabled>Retry</button>
-        <button id="settings-btn" class="secondary" disabled>Settings</button>
+      <p>Keep an eye out for the golden beet to boost your combo meter!</p>
+      <div class="btn-row">
+        <button id="reset-btn" class="secondary">Reset Field</button>
       </div>
-      <div class="input-hint" id="input-hint"></div>
-    </section>
-
-    <section class="panel right-panel">
-      <h3>How it Works</h3>
-      <p class="hint">Stay inside the glowing sweet spot to build uproot progress. Drift outside and the crop sinks back down.</p>
-      <p class="hint">When tension rises, the meter shakes — keep control and POP the crop out of the soil!</p>
-      <h3>Analytics Hooks</h3>
-      <p class="hint">Events are logged to the console for now: pull_start, pull_win, pull_fail.</p>
-    </section>
+    </aside>
   </main>
 
   <script>
     const canvas = document.getElementById("game-canvas");
     const ctx = canvas.getContext("2d");
-
-    const progressFill = document.getElementById("progress-fill");
-    const progressValue = document.getElementById("progress-value");
-    const statusText = document.getElementById("status-text");
+    const toast = document.getElementById("toast");
+    const splash = document.getElementById("splash");
     const startBtn = document.getElementById("start-btn");
-    const retryBtn = document.getElementById("retry-btn");
-    const settingsBtn = document.getElementById("settings-btn");
-    const difficultySelect = document.getElementById("difficulty");
-    const inputModeSelect = document.getElementById("input-mode");
-    const soundToggle = document.getElementById("sound-toggle");
-    const inputHint = document.getElementById("input-hint");
+    const howBtn = document.getElementById("how-btn");
+    const resetBtn = document.getElementById("reset-btn");
+    const statHarvested = document.getElementById("stat-harvested");
+    const statCombo = document.getElementById("stat-combo");
 
-    const cropNameEl = document.getElementById("crop-name");
-    const cropDifficultyEl = document.getElementById("crop-difficulty");
-    const cropSoilEl = document.getElementById("crop-soil");
-    const cropRarityEl = document.getElementById("crop-rarity");
-    const cropFlavorEl = document.getElementById("crop-flavor");
-    const cropSizeEl = document.getElementById("crop-size");
-
-    const statPulls = document.getElementById("stat-pulls");
-    const statWins = document.getElementById("stat-wins");
-
-    const contentData = {
-      soils: {
-        loose: {
-          label: "Loose",
-          resistance: 0.04,
-          decayMultiplier: 0.4,
-          wobble: 0.12,
-          color: getComputedStyle(document.documentElement).getPropertyValue("--soil-loose"),
-        },
-        packed: {
-          label: "Packed",
-          resistance: 0.06,
-          decayMultiplier: 0.7,
-          wobble: 0.2,
-          color: getComputedStyle(document.documentElement).getPropertyValue("--soil-packed"),
-        },
-        rocky: {
-          label: "Rocky",
-          resistance: 0.08,
-          decayMultiplier: 0.9,
-          wobble: 0.28,
-          color: getComputedStyle(document.documentElement).getPropertyValue("--soil-rocky"),
-        },
-      },
-      crops: {
-        easy: [
-          {
-            name: "Carrot",
-            rarity: "Common",
-            soil: "loose",
-            targetZoneSize: 0.28,
-            gravity: 0.028,
-            resistance: 0.04,
-            wobbleAmount: 0.12,
-            resistanceSpikeChance: 0.01,
-            timeLimit: 18,
-            flavor: "A chill carrot that just wants to go skyward.",
-          },
-          {
-            name: "Turnip",
-            rarity: "Common",
-            soil: "loose",
-            targetZoneSize: 0.3,
-            gravity: 0.03,
-            resistance: 0.045,
-            wobbleAmount: 0.1,
-            resistanceSpikeChance: 0.02,
-            timeLimit: 18,
-            flavor: "Round and ready to roll out.",
-          },
-          {
-            name: "Baby Boot",
-            rarity: "Uncommon",
-            soil: "packed",
-            targetZoneSize: 0.26,
-            gravity: 0.032,
-            resistance: 0.05,
-            wobbleAmount: 0.15,
-            resistanceSpikeChance: 0.03,
-            timeLimit: 17,
-            flavor: "Is it a crop? Is it a shoe? Yes.",
-          },
-        ],
-        medium: [
-          {
-            name: "Burger Sprout",
-            rarity: "Rare",
-            soil: "packed",
-            targetZoneSize: 0.22,
-            gravity: 0.035,
-            resistance: 0.055,
-            wobbleAmount: 0.2,
-            resistanceSpikeChance: 0.05,
-            timeLimit: 16,
-            flavor: "Smells like lunch. Pull carefully.",
-          },
-          {
-            name: "Sneaker Plant",
-            rarity: "Rare",
-            soil: "rocky",
-            targetZoneSize: 0.2,
-            gravity: 0.038,
-            resistance: 0.06,
-            wobbleAmount: 0.22,
-            resistanceSpikeChance: 0.06,
-            timeLimit: 15,
-            flavor: "It runs when you do.",
-          },
-        ],
-        hard: [
-          {
-            name: "Diamond Cabbage",
-            rarity: "Legendary",
-            soil: "rocky",
-            targetZoneSize: 0.16,
-            gravity: 0.042,
-            resistance: 0.07,
-            wobbleAmount: 0.28,
-            resistanceSpikeChance: 0.08,
-            timeLimit: 14,
-            flavor: "Shines under pressure.",
-          },
-          {
-            name: "Play Button Sprout",
-            rarity: "Mythic",
-            soil: "rocky",
-            targetZoneSize: 0.15,
-            gravity: 0.045,
-            resistance: 0.075,
-            wobbleAmount: 0.3,
-            resistanceSpikeChance: 0.1,
-            timeLimit: 13,
-            flavor: "Subscribe to chaos.",
-          },
-        ],
-      },
+    const state = {
+      crops: [],
+      particles: [],
+      harvested: 0,
+      combo: 0,
+      showSplash: true,
+      tutorialMode: false,
+      lastHarvestTime: 0,
+      hoveredCrop: null,
     };
 
-    const gameState = {
-      running: false,
-      ended: false,
-      status: "idle",
-      timeElapsed: 0,
-      progress: 0,
-      sliderPosition: 0.2,
-      sliderVelocity: 0,
-      isPulling: false,
-      lastFrame: 0,
-      shakeAmount: 0,
-      pullAttempts: 0,
-      currentCrop: null,
-      targetZone: { start: 0.4, end: 0.6 },
-      popAnimation: 0,
-      sizeRoll: 1,
-      bestSizeRolls: {},
-      stats: {
-        pulls: 0,
-        wins: 0,
+    const cropTypes = [
+      {
+        name: "Carrot",
+        color: "#f9a65a",
+        stem: "#6fbf73",
+        value: 1,
+        weight: 4,
       },
+      {
+        name: "Tomato",
+        color: "#f26d6d",
+        stem: "#6fbf73",
+        value: 2,
+        weight: 3,
+      },
+      {
+        name: "Lettuce",
+        color: "#7cc576",
+        stem: "#4a9c5d",
+        value: 1,
+        weight: 3,
+      },
+      {
+        name: "Golden Beet",
+        color: "#ffd166",
+        stem: "#9c7b29",
+        value: 3,
+        weight: 1,
+        golden: true,
+      },
+    ];
+
+    const field = {
+      width: canvas.width,
+      height: canvas.height,
+      center: { x: canvas.width / 2, y: canvas.height / 2 },
     };
 
-    const audioManager = (() => {
-      let audioContext = null;
-
-      const playTone = (frequency, duration = 0.15, type = "sine") => {
-        if (!soundToggle.checked) {
-          return;
-        }
-        if (!audioContext) {
-          audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        const oscillator = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        oscillator.type = type;
-        oscillator.frequency.value = frequency;
-        gain.gain.value = 0.08;
-        oscillator.connect(gain);
-        gain.connect(audioContext.destination);
-        oscillator.start();
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
-        oscillator.stop(audioContext.currentTime + duration);
-      };
-
-      return {
-        startPull: () => playTone(260, 0.12, "triangle"),
-        strain: () => playTone(180, 0.08, "sawtooth"),
-        success: () => playTone(520, 0.2, "triangle"),
-        fail: () => playTone(140, 0.18, "square"),
-      };
-    })();
-
-    const uiRenderer = {
-      updateStatus(text, type = "") {
-        statusText.textContent = text;
-        statusText.className = `status ${type}`.trim();
-      },
-      updateProgress(value) {
-        const percent = Math.max(0, Math.min(100, Math.round(value)));
-        progressFill.style.width = `${percent}%`;
-        progressValue.textContent = `${percent}%`;
-      },
-      updateCropCard(crop) {
-        if (!crop) {
-          cropNameEl.textContent = "Pick a difficulty to begin";
-          cropDifficultyEl.textContent = "Difficulty: --";
-          cropSoilEl.textContent = "Soil: --";
-          cropRarityEl.textContent = "Rarity: --";
-          cropFlavorEl.textContent = "The soil is waiting for a brave pull.";
-          cropSizeEl.textContent = "";
-          return;
-        }
-        const soil = contentData.soils[crop.soil];
-        cropNameEl.textContent = crop.name;
-        cropDifficultyEl.textContent = `Difficulty: ${crop.difficultyLabel}`;
-        cropSoilEl.textContent = `Soil: ${soil.label}`;
-        cropRarityEl.textContent = `Rarity: ${crop.rarity}`;
-        cropFlavorEl.textContent = crop.flavor;
-        const best = gameState.bestSizeRolls[crop.name];
-        cropSizeEl.textContent = best ? `Best size roll: ${best.toFixed(1)}x` : "Best size roll: --";
-      },
-      updateStats() {
-        statPulls.textContent = gameState.stats.pulls;
-        statWins.textContent = gameState.stats.wins;
-      },
-      updateInputHint() {
-        const mode = inputModeSelect.value;
-        if (mode === "hold") {
-          inputHint.textContent = "Hold mouse/touch/space to pull. Release to reset tension.";
-        } else {
-          inputHint.textContent = "Tap/click repeatedly to apply short pulls.";
-        }
-      },
-    };
-
-    const meterSystem = {
-      reset() {
-        gameState.sliderPosition = 0.2;
-        gameState.sliderVelocity = 0;
-        gameState.shakeAmount = 0;
-      },
-      update(delta) {
-        const crop = gameState.currentCrop;
-        if (!crop) return;
-
-        const soil = contentData.soils[crop.soil];
-        let force = 0;
-        if (inputModeSelect.value === "hold") {
-          force = gameState.isPulling ? crop.pullForce : 0;
-        } else {
-          force = gameState.isPulling ? crop.pullForce * 1.2 : 0;
-        }
-
-        if (Math.random() < crop.resistanceSpikeChance * delta) {
-          gameState.sliderVelocity -= 0.08;
-        }
-
-        gameState.sliderVelocity += force * delta;
-        gameState.sliderVelocity -= crop.resistance * soil.decayMultiplier * delta;
-        gameState.sliderVelocity -= crop.gravity * delta;
-
-        const wobble = (Math.random() - 0.5) * crop.wobbleAmount * soil.wobble * delta;
-        gameState.sliderVelocity += wobble;
-
-        gameState.sliderPosition += gameState.sliderVelocity * delta;
-
-        if (gameState.sliderPosition < 0) {
-          gameState.sliderPosition = 0;
-          gameState.sliderVelocity = 0;
-        }
-        if (gameState.sliderPosition > 1) {
-          gameState.sliderPosition = 1;
-          gameState.sliderVelocity = 0;
-        }
-      },
-    };
-
-    const progressSystem = {
-      update(delta) {
-        const crop = gameState.currentCrop;
-        if (!crop) return;
-
-        const inZone =
-          gameState.sliderPosition >= gameState.targetZone.start &&
-          gameState.sliderPosition <= gameState.targetZone.end;
-
-        if (inZone) {
-          gameState.progress += crop.gainRate * delta;
-          audioManager.strain();
-        } else {
-          if (crop.decayRate > 0) {
-            gameState.progress -= crop.decayRate * delta;
-          }
-        }
-
-        gameState.progress = Math.max(0, Math.min(100, gameState.progress));
-
-        if (gameState.progress >= 100) {
-          winGame();
-        }
-
-        if (crop.timeLimit && gameState.timeElapsed > crop.timeLimit) {
-          failGame("Time ran out");
-        }
-
-        if (gameState.progress <= 0 && gameState.timeElapsed > 3 && gameState.status === "pulling") {
-          failGame("Lost all tension");
-        }
-
-        uiRenderer.updateProgress(gameState.progress);
-      },
-    };
-
-    const contentSystem = {
-      getRandomCrop(difficulty) {
-        const crops = contentData.crops[difficulty];
-        const crop = { ...crops[Math.floor(Math.random() * crops.length)] };
-        crop.difficultyLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
-        crop.pullForce = difficulty === "easy" ? 0.18 : difficulty === "medium" ? 0.16 : 0.14;
-        crop.gainRate = difficulty === "easy" ? 22 : difficulty === "medium" ? 18 : 14;
-        crop.decayRate = difficulty === "easy" ? 0 : difficulty === "medium" ? 8 : 12;
-        return crop;
-      },
-    };
-
-    const storageKey = "flexfarm-pull-stats";
-
-    const persistence = {
-      load() {
-        try {
-          const raw = localStorage.getItem(storageKey);
-          if (raw) {
-            const data = JSON.parse(raw);
-            gameState.stats = data.stats || gameState.stats;
-            gameState.bestSizeRolls = data.bestSizeRolls || {};
-          }
-        } catch (error) {
-          console.warn("Could not load stats", error);
-        }
-      },
-      save() {
-        try {
-          localStorage.setItem(
-            storageKey,
-            JSON.stringify({
-              stats: gameState.stats,
-              bestSizeRolls: gameState.bestSizeRolls,
-            })
-          );
-        } catch (error) {
-          console.warn("Could not save stats", error);
-        }
-      },
-    };
-
-    function resetGame() {
-      gameState.running = false;
-      gameState.ended = false;
-      gameState.status = "idle";
-      gameState.timeElapsed = 0;
-      gameState.progress = 0;
-      gameState.popAnimation = 0;
-      gameState.isPulling = false;
-      meterSystem.reset();
-      uiRenderer.updateProgress(gameState.progress);
-      uiRenderer.updateStatus("Ready to pull.");
-      retryBtn.disabled = true;
-      settingsBtn.disabled = true;
-      startBtn.disabled = false;
-    }
-
-    function startGame() {
-      const difficulty = difficultySelect.value;
-      gameState.currentCrop = contentSystem.getRandomCrop(difficulty);
-      const zoneStart = 0.12 + Math.random() * (0.76 - gameState.currentCrop.targetZoneSize);
-      gameState.targetZone = {
-        start: zoneStart,
-        end: zoneStart + gameState.currentCrop.targetZoneSize,
-      };
-
-      gameState.running = true;
-      gameState.ended = false;
-      gameState.status = "pulling";
-      gameState.timeElapsed = 0;
-      gameState.progress = 0;
-      meterSystem.reset();
-      gameState.pullAttempts += 1;
-      gameState.stats.pulls += 1;
-      gameState.sizeRoll = 1 + Math.random() * 7;
-
-      uiRenderer.updateCropCard(gameState.currentCrop);
-      uiRenderer.updateProgress(gameState.progress);
-      uiRenderer.updateStatus("Pull steady...", "");
-      retryBtn.disabled = false;
-      settingsBtn.disabled = false;
-      startBtn.disabled = true;
-      uiRenderer.updateStats();
-
-      audioManager.startPull();
-
-      console.info("pull_start", {
-        crop: gameState.currentCrop.name,
-        soil: gameState.currentCrop.soil,
-        difficulty,
+    const rngPick = (list) => {
+      const total = list.reduce((sum, item) => sum + item.weight, 0);
+      let roll = Math.random() * total;
+      return list.find((item) => {
+        roll -= item.weight;
+        return roll <= 0;
       });
-      persistence.save();
-    }
+    };
 
-    function winGame() {
-      if (gameState.ended) return;
-      gameState.ended = true;
-      gameState.running = false;
-      gameState.status = "win";
-      gameState.popAnimation = 1;
-      gameState.stats.wins += 1;
-      gameState.bestSizeRolls[gameState.currentCrop.name] = Math.max(
-        gameState.bestSizeRolls[gameState.currentCrop.name] || 0,
-        gameState.sizeRoll
-      );
-      uiRenderer.updateStatus(`YOU PULLED: ${gameState.currentCrop.name}!`, "win");
-      cropSizeEl.textContent = `Size roll: ${gameState.sizeRoll.toFixed(1)}x`;
-      uiRenderer.updateCropCard(gameState.currentCrop);
-      audioManager.success();
-      console.info("pull_win", {
-        timeToWin: gameState.timeElapsed.toFixed(2),
-        attempts: gameState.pullAttempts,
-        accuracy: `${Math.round((gameState.progress / 100) * 100)}%`,
-      });
-      persistence.save();
-      uiRenderer.updateStats();
-    }
+    const showToast = (message) => {
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 1100);
+    };
 
-    function failGame(reason) {
-      if (gameState.ended) return;
-      gameState.ended = true;
-      gameState.running = false;
-      gameState.status = "fail";
-      uiRenderer.updateStatus(`Fail: ${reason}. Try again!`, "fail");
-      audioManager.fail();
-      console.info("pull_fail", {
-        reason,
-        time: gameState.timeElapsed.toFixed(2),
-        peakProgress: gameState.progress.toFixed(1),
-      });
-      persistence.save();
-      uiRenderer.updateStats();
-    }
+    const spawnCrop = () => {
+      const type = rngPick(cropTypes);
+      const margin = 80;
+      const crop = {
+        id: Math.random().toString(36).slice(2),
+        type,
+        x: margin + Math.random() * (field.width - margin * 2),
+        y: margin + Math.random() * (field.height - margin * 2),
+        size: 18 + Math.random() * 10,
+        bobOffset: Math.random() * Math.PI * 2,
+      };
+      state.crops.push(crop);
+    };
 
-    function drawMeter() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (!gameState.currentCrop) {
-        ctx.fillStyle = "#c2b7a6";
-        ctx.font = "16px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("Select Start Pull", canvas.width / 2, canvas.height / 2);
-        return;
+    const resetField = () => {
+      state.crops = [];
+      state.particles = [];
+      for (let i = 0; i < 18; i += 1) {
+        spawnCrop();
       }
+      state.harvested = 0;
+      state.combo = 0;
+      updateStats();
+    };
 
-      const meterX = canvas.width * 0.25;
-      const meterWidth = canvas.width * 0.5;
-      const meterY = canvas.height * 0.08;
-      const meterHeight = canvas.height * 0.82;
+    const updateStats = () => {
+      statHarvested.textContent = state.harvested;
+      statCombo.textContent = state.combo;
+    };
 
-      const soil = contentData.soils[gameState.currentCrop.soil];
-      ctx.fillStyle = "#f6efe4";
-      ctx.fillRect(meterX, meterY, meterWidth, meterHeight);
-
-      ctx.fillStyle = soil.color;
-      ctx.fillRect(meterX, meterY + meterHeight * 0.7, meterWidth, meterHeight * 0.3);
-
-      ctx.strokeStyle = "#c5b7a1";
-      ctx.lineWidth = 4;
-      ctx.strokeRect(meterX, meterY, meterWidth, meterHeight);
-
-      const targetYStart = meterY + meterHeight * (1 - gameState.targetZone.end);
-      const targetHeight = meterHeight * (gameState.targetZone.end - gameState.targetZone.start);
-      ctx.fillStyle = "rgba(63, 212, 138, 0.35)";
-      ctx.fillRect(meterX + 6, targetYStart, meterWidth - 12, targetHeight);
-
-      const glow =
-        gameState.sliderPosition >= gameState.targetZone.start &&
-        gameState.sliderPosition <= gameState.targetZone.end;
-      if (glow) {
-        ctx.shadowColor = "rgba(63, 212, 138, 0.7)";
-        ctx.shadowBlur = 14;
+    const createParticles = (x, y, color) => {
+      for (let i = 0; i < 12; i += 1) {
+        state.particles.push({
+          x,
+          y,
+          vx: (Math.random() - 0.5) * 4,
+          vy: (Math.random() - 0.8) * 4,
+          life: 40 + Math.random() * 20,
+          color,
+        });
       }
+    };
 
-      const sliderY = meterY + meterHeight * (1 - gameState.sliderPosition);
-      ctx.fillStyle = "#1d1f24";
-      ctx.fillRect(meterX - 6, sliderY - 8, meterWidth + 12, 16);
-      ctx.shadowBlur = 0;
+    const drawBackground = () => {
+      ctx.fillStyle = "#d2f3ff";
+      ctx.fillRect(0, 0, field.width, field.height);
 
-      const tension = gameState.progress > 70 ? (gameState.progress - 70) / 30 : 0;
-      if (tension > 0) {
-        ctx.fillStyle = "rgba(242, 95, 92, 0.25)";
-        ctx.fillRect(meterX, meterY, meterWidth, meterHeight);
-      }
+      ctx.fillStyle = "#8fda7f";
+      ctx.fillRect(0, field.height * 0.15, field.width, field.height * 0.85);
 
-      const cropY = meterY + meterHeight * 0.8 - gameState.popAnimation * 120;
-      ctx.fillStyle = "#f25f5c";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
       ctx.beginPath();
-      ctx.ellipse(canvas.width / 2, cropY, 22, 28, 0, 0, Math.PI * 2);
+      ctx.ellipse(140, 120, 70, 30, 0, 0, Math.PI * 2);
+      ctx.ellipse(220, 115, 70, 30, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = "#2b2b2b";
-      ctx.font = "13px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(gameState.currentCrop.name, canvas.width / 2, meterY + meterHeight + 24);
-    }
+      ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+      ctx.beginPath();
+      ctx.ellipse(640, 90, 80, 32, 0, 0, Math.PI * 2);
+      ctx.ellipse(720, 100, 60, 28, 0, 0, Math.PI * 2);
+      ctx.fill();
 
-    function updateFrame(timestamp) {
-      if (!gameState.lastFrame) {
-        gameState.lastFrame = timestamp;
+      ctx.fillStyle = "#6bb867";
+      for (let i = 0; i < 12; i += 1) {
+        ctx.fillRect(0, field.height * 0.2 + i * 40, field.width, 18);
       }
-      const deltaMs = timestamp - gameState.lastFrame;
-      const delta = Math.min(deltaMs / 16.67, 2);
-      gameState.lastFrame = timestamp;
+    };
 
-      if (gameState.running) {
-        gameState.timeElapsed += deltaMs / 1000;
-        meterSystem.update(delta);
-        progressSystem.update(delta);
-        const tension = gameState.progress > 70 ? (gameState.progress - 70) / 30 : 0;
-        gameState.shakeAmount = tension * 4;
+    const drawCrop = (crop, time) => {
+      const bob = Math.sin(time / 500 + crop.bobOffset) * 2;
+      const highlight = state.hoveredCrop && state.hoveredCrop.id === crop.id;
+      const soilY = crop.y + crop.size + 10;
+
+      ctx.fillStyle = "#9b5d3b";
+      ctx.beginPath();
+      ctx.ellipse(crop.x, soilY, crop.size * 1.2, crop.size * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = crop.type.color;
+      ctx.beginPath();
+      ctx.ellipse(crop.x, crop.y + bob, crop.size, crop.size * 1.3, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = crop.type.stem;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(crop.x, crop.y - crop.size * 0.9 + bob);
+      ctx.lineTo(crop.x, crop.y - crop.size * 1.6 + bob);
+      ctx.stroke();
+
+      ctx.fillStyle = crop.type.stem;
+      ctx.beginPath();
+      ctx.ellipse(crop.x - 6, crop.y - crop.size * 1.6 + bob, 8, 4, -0.4, 0, Math.PI * 2);
+      ctx.ellipse(crop.x + 6, crop.y - crop.size * 1.6 + bob, 8, 4, 0.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (highlight) {
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(crop.x, crop.y + bob, crop.size * 1.4, 0, Math.PI * 2);
+        ctx.stroke();
       }
+    };
 
-      if (gameState.popAnimation > 0) {
-        gameState.popAnimation += 0.06;
-        if (gameState.popAnimation > 1.6) {
-          gameState.popAnimation = 1.6;
-        }
-      }
+    const drawParticles = () => {
+      state.particles.forEach((particle) => {
+        ctx.fillStyle = particle.color;
+        ctx.globalAlpha = Math.max(0, particle.life / 60);
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+    };
 
-      ctx.save();
-      if (gameState.shakeAmount > 0 && gameState.running) {
-        const shakeX = (Math.random() - 0.5) * gameState.shakeAmount;
-        const shakeY = (Math.random() - 0.5) * gameState.shakeAmount;
-        ctx.translate(shakeX, shakeY);
-      }
-      drawMeter();
-      ctx.restore();
+    const updateParticles = () => {
+      state.particles = state.particles.filter((particle) => particle.life > 0);
+      state.particles.forEach((particle) => {
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.vy += 0.08;
+        particle.life -= 1;
+      });
+    };
 
-      requestAnimationFrame(updateFrame);
-    }
+    const render = (time) => {
+      drawBackground();
+      state.crops.forEach((crop) => drawCrop(crop, time));
+      drawParticles();
+      updateParticles();
+      requestAnimationFrame(render);
+    };
 
-    function setPulling(active) {
-      if (!gameState.running || gameState.ended) {
-        gameState.isPulling = false;
-        return;
-      }
-      if (inputModeSelect.value === "hold") {
-        gameState.isPulling = active;
-      } else if (active) {
-        gameState.isPulling = true;
-        setTimeout(() => {
-          gameState.isPulling = false;
-        }, 120);
-      }
-    }
+    const harvestCrop = (crop) => {
+      const now = Date.now();
+      const timeSince = now - state.lastHarvestTime;
+      state.lastHarvestTime = now;
+      state.combo = timeSince < 1500 ? Math.min(state.combo + 1, 9) : 0;
+      const comboBonus = crop.type.golden ? 2 : 0;
+      const points = crop.type.value + comboBonus;
+      state.harvested += points;
+      updateStats();
+      createParticles(crop.x, crop.y, crop.type.color);
+      showToast(`${crop.type.name} +${points}`);
+      state.crops = state.crops.filter((item) => item.id !== crop.id);
+      spawnCrop();
+    };
 
-    canvas.addEventListener("pointerdown", () => setPulling(true));
-    canvas.addEventListener("pointerup", () => setPulling(false));
-    canvas.addEventListener("pointerleave", () => setPulling(false));
+    const getCropAt = (x, y) => {
+      return state.crops.find((crop) => {
+        const dx = x - crop.x;
+        const dy = y - crop.y;
+        return Math.sqrt(dx * dx + dy * dy) < crop.size * 1.2;
+      });
+    };
 
-    window.addEventListener("keydown", (event) => {
-      if (event.code === "Space") {
-        event.preventDefault();
-        setPulling(true);
-      }
+    const scalePoint = (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY,
+      };
+    };
+
+    canvas.addEventListener("pointermove", (event) => {
+      const point = scalePoint(event);
+      state.hoveredCrop = getCropAt(point.x, point.y);
     });
 
-    window.addEventListener("keyup", (event) => {
-      if (event.code === "Space") {
-        setPulling(false);
+    canvas.addEventListener("pointerleave", () => {
+      state.hoveredCrop = null;
+    });
+
+    canvas.addEventListener("pointerdown", (event) => {
+      if (state.showSplash) {
+        return;
+      }
+      const point = scalePoint(event);
+      const crop = getCropAt(point.x, point.y);
+      if (crop) {
+        harvestCrop(crop);
       }
     });
 
     startBtn.addEventListener("click", () => {
-      startGame();
+      state.showSplash = false;
+      splash.style.display = "none";
     });
 
-    retryBtn.addEventListener("click", () => {
-      resetGame();
-      startGame();
+    howBtn.addEventListener("click", () => {
+      state.showSplash = false;
+      splash.style.display = "none";
+      showToast("Click crops to pull them up!");
     });
 
-    settingsBtn.addEventListener("click", () => {
-      resetGame();
-      uiRenderer.updateCropCard(null);
+    resetBtn.addEventListener("click", () => {
+      resetField();
+      showToast("Fresh soil, fresh crops!");
     });
 
-    inputModeSelect.addEventListener("change", () => {
-      uiRenderer.updateInputHint();
-    });
-
-    difficultySelect.addEventListener("change", () => {
-      uiRenderer.updateCropCard(null);
-    });
-
-    persistence.load();
-    uiRenderer.updateStats();
-    uiRenderer.updateInputHint();
-    resetGame();
-    requestAnimationFrame(updateFrame);
+    resetField();
+    requestAnimationFrame(render);
   </script>
 </body>
 </html>
