@@ -31,6 +31,14 @@
       flex-direction: column;
     }
 
+    body.playable main {
+      grid-template-columns: 1fr;
+    }
+
+    body.playable .panel {
+      display: none;
+    }
+
     header {
       padding: 16px 24px;
       display: flex;
@@ -202,14 +210,38 @@
       gap: 16px;
     }
 
-    .splash h2 {
-      font-size: 2rem;
+    .splash .logo {
+      font-size: clamp(2.2rem, 4vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      margin: 0;
+      padding: 12px 28px;
+      border-radius: 999px;
+      background: #ffffff;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      animation: bounce 1.6s ease-in-out infinite;
+    }
+
+    .splash .cta {
+      font-size: 1.1rem;
+      font-weight: 600;
       margin: 0;
     }
 
-    .splash p {
-      max-width: 360px;
+    .splash .hint {
+      font-size: 0.95rem;
+      opacity: 0.8;
       margin: 0;
+    }
+
+    @keyframes bounce {
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-14px);
+      }
     }
 
     .asset-panel {
@@ -256,13 +288,9 @@
       <canvas id="game-canvas" width="960" height="640"></canvas>
       <div class="toast" id="toast">Yay!</div>
       <div class="splash" id="splash">
-        <h2>Welcome to Whimsy Harvest</h2>
-        <p>Stroll the meadow, click a crop, and give it a gentle tug. Pull up enough crops to light up the field!</p>
-        <p><strong>Tip:</strong> Hit Start to enable sound + music.</p>
-        <div class="btn-row">
-          <button id="start-btn">Start Harvesting</button>
-          <button id="how-btn" class="secondary">How to Play</button>
-        </div>
+        <h2 class="logo">Whimsy Harvest</h2>
+        <p class="cta">Click to play</p>
+        <p class="hint">Tap to enable sound + music.</p>
       </div>
     </section>
 
@@ -281,7 +309,8 @@
         <p>Swap these file paths with your real audio + image assets:</p>
         <p>Music: <code>assets/music/relaxing-loop.mp3</code></p>
         <p>SFX: <code>assets/sfx/harvest-pop.mp3</code>, <code>assets/sfx/reveal-poof.mp3</code></p>
-        <p>Images: <code>assets/items/carrot.png</code>, <code>assets/items/tomato.png</code>, <code>assets/items/lettuce.png</code>, <code>assets/items/golden-beet.png</code></p>
+        <p>Images: <code>assets/items/carrot.png</code>, <code>assets/items/tomato.png</code>, <code>assets/items/lettuce.png</code>, <code>assets/items/golden-beet.png</code>, <code>assets/items/harvest-pop.png</code></p>
+        <p>Recommended sizes: field art <code>960×640</code>, crops <code>96×96</code> (transparent PNG).</p>
       </div>
       <div class="btn-row">
         <button id="reset-btn" class="secondary">Reset Field</button>
@@ -294,13 +323,17 @@
     const ctx = canvas.getContext("2d");
     const toast = document.getElementById("toast");
     const splash = document.getElementById("splash");
-    const startBtn = document.getElementById("start-btn");
-    const howBtn = document.getElementById("how-btn");
     const resetBtn = document.getElementById("reset-btn");
     const statHarvested = document.getElementById("stat-harvested");
     const statCombo = document.getElementById("stat-combo");
     const soundToggle = document.getElementById("sound-toggle");
     const musicToggle = document.getElementById("music-toggle");
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const isPlayable = urlParams.has("playable");
+    if (isPlayable) {
+      document.body.classList.add("playable");
+    }
 
     const state = {
       crops: [],
@@ -330,6 +363,7 @@
         Tomato: "assets/items/tomato.png",
         Lettuce: "assets/items/lettuce.png",
         "Golden Beet": "assets/items/golden-beet.png",
+        reveal: "assets/items/harvest-pop.png",
       },
     };
 
@@ -509,28 +543,51 @@
     };
 
     const drawBackground = () => {
-      ctx.fillStyle = "#d2f3ff";
+      const skyHeight = field.height * 0.32;
+      const rowHeight = 46;
+
+      ctx.fillStyle = "#bfe9ff";
       ctx.fillRect(0, 0, field.width, field.height);
 
-      ctx.fillStyle = "#8fda7f";
-      ctx.fillRect(0, field.height * 0.15, field.width, field.height * 0.85);
+      const skyGradient = ctx.createLinearGradient(0, 0, 0, skyHeight);
+      skyGradient.addColorStop(0, "#bfe9ff");
+      skyGradient.addColorStop(1, "#eaf8ff");
+      ctx.fillStyle = skyGradient;
+      ctx.fillRect(0, 0, field.width, skyHeight);
 
-      ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
       ctx.beginPath();
-      ctx.ellipse(140, 120, 70, 30, 0, 0, Math.PI * 2);
-      ctx.ellipse(220, 115, 70, 30, 0, 0, Math.PI * 2);
+      ctx.ellipse(160, 80, 90, 34, 0, 0, Math.PI * 2);
+      ctx.ellipse(250, 85, 70, 30, 0, 0, Math.PI * 2);
+      ctx.ellipse(360, 78, 80, 32, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
       ctx.beginPath();
-      ctx.ellipse(640, 90, 80, 32, 0, 0, Math.PI * 2);
-      ctx.ellipse(720, 100, 60, 28, 0, 0, Math.PI * 2);
+      ctx.ellipse(620, 70, 95, 36, 0, 0, Math.PI * 2);
+      ctx.ellipse(720, 90, 70, 28, 0, 0, Math.PI * 2);
+      ctx.ellipse(810, 72, 80, 30, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = "#6bb867";
+      const fieldGradient = ctx.createLinearGradient(0, skyHeight, 0, field.height);
+      fieldGradient.addColorStop(0, "#9fe28f");
+      fieldGradient.addColorStop(1, "#7cc576");
+      ctx.fillStyle = fieldGradient;
+      ctx.fillRect(0, skyHeight, field.width, field.height - skyHeight);
+
       for (let i = 0; i < 12; i += 1) {
-        ctx.fillRect(0, field.height * 0.2 + i * 40, field.width, 18);
+        const y = skyHeight + i * rowHeight;
+        ctx.fillStyle = i % 2 === 0 ? "#7bbd69" : "#8acf74";
+        ctx.fillRect(0, y, field.width, rowHeight);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+        ctx.fillRect(0, y + rowHeight * 0.1, field.width, rowHeight * 0.18);
       }
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+      ctx.beginPath();
+      ctx.ellipse(220, 210, 110, 42, 0, 0, Math.PI * 2);
+      ctx.ellipse(700, 240, 130, 50, 0, 0, Math.PI * 2);
+      ctx.fill();
     };
 
     const drawCrop = (crop, time) => {
@@ -651,8 +708,8 @@
         type: crop.type,
         start: performance.now(),
         duration: 650,
-        size: crop.size * 2.2,
-        image: getItemImage(crop.type),
+        size: 72,
+        image: imageCache.reveal || getItemImage({ name: "reveal" }),
       });
       showToast(`${crop.type.name} +${points}`);
       playSfx("harvest");
@@ -704,13 +761,10 @@
       }
     });
 
-    startBtn.addEventListener("click", () => {
-      state.showSplash = false;
-      splash.style.display = "none";
-      ensureAudioReady();
-    });
-
-    howBtn.addEventListener("click", () => {
+    splash.addEventListener("pointerdown", () => {
+      if (!state.showSplash) {
+        return;
+      }
       state.showSplash = false;
       splash.style.display = "none";
       ensureAudioReady();
