@@ -1,0 +1,62 @@
+# =========================
+# Archives / Packages
+# =========================
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+
+# =========================
+# OS / Editor Junk
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*.bak
+
+# VS Code
+.vscode/
+
+# =========================
+# Node / Build Artifacts
+# =========================
+node_modules/
+dist/
+build/
+out/
+.cache/
+
+# =========================
+# Logs & Temp Files
+# =========================
+*.log
+*.tmp
+*.temp
+
+# =========================
+# Environment / Secrets
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Minified / Generated Files
+# (keep source versions only)
+# =========================
+*.min.js
+*.min.css
+*.map
+
+# =========================
+# Testing / Coverage
+# =========================
+coverage/
+
+# =========================
+# Local Dev Servers
+# =========================
+.local/
